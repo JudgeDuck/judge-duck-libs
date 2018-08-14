@@ -49,6 +49,7 @@ LIB_SRCFILES :=	\
 			assert.c \
 			errno.c \
 			misc.cpp \
+			isoc99.S \
 			# [fake] atoi
 			# [TODO] [imp] malloc
 			# [TODO] [imp] getenv
