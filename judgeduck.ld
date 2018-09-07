@@ -51,7 +51,18 @@ SECTIONS
 		. = 0x1000;
 		PROVIDE(thisenv = .);
 		. = 0x1004;
-		*(.data)
+	}
+	
+	. = ALIGN(0x1000);
+	
+	.tdata : {
+		*(.tdata);
+	}
+	
+	. = ALIGN(0x1000);
+	. = . + 0x1000;  /* Some space maybe for canary, huh ? */
+	.data : {
+		*(.data);
 	}
 
 	PROVIDE(edata = .);
