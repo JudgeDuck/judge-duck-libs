@@ -18,14 +18,15 @@ enum {
 	SYS_ipc_try_send,
 	SYS_ipc_recv,
 	SYS_time_msec,
-	SYS_net_try_transmit,
-	SYS_net_try_receive,
 	SYS_enter_judge,
 	SYS_accept_enter_judge,
 	SYS_quit_judge,
 	SYS_map_judge_pages,
 	SYS_halt,
 	SYS_set_tls_base,
+	SYS_map_pci_device,
+	SYS_page_alloc_with_pa,
+	SYS_get_tsc_frequency,
 	NSYSCALLS
 };
 
