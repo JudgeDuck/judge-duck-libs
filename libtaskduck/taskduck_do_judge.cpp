@@ -19,6 +19,12 @@ namespace judgeduck {
 	char *stdout_content;
 	int stdout_max_size;
 	int stdout_size;
+	
+	unsigned * volatile start_signal;
+	unsigned * volatile contestant_ready;
+	unsigned * volatile contestant_done;
+	
+	char judge_signal_page[PGSIZE] __attribute__((aligned(PGSIZE)));
 }
 
 static void read_file(TaskDuck *td, const char *filename, char *&content, int &size) {
@@ -48,14 +54,22 @@ static void init_judgeduck(TaskDuck *td) {
 	extern int ebss;
 	
 	// Map the first metadata page
-	sys_map_judge_pages(td->judge_pages, 0, PGSIZE);
+	sys_map_judge_pages(td->judge_pages, 0, 2 * PGSIZE);
+	
+	// Map the judge signal page
+	sys_page_map(0, td->judge_pages, 0, judgeduck::judge_signal_page, PTE_U | PTE_P | PTE_W);
 	
 	// Read the input info
-	unsigned input_pos = ((unsigned *) td->judge_pages)[0];
-	unsigned input_len = ((unsigned *) td->judge_pages)[1];
+	unsigned input_pos = ((unsigned *) td->judge_pages)[PGSIZE / 4 + 0];
+	unsigned input_len = ((unsigned *) td->judge_pages)[PGSIZE / 4 + 1];
 	sys_map_judge_pages(td->judge_pages + input_pos, input_pos, ROUNDUP(input_len, PGSIZE));
 	td->stdin_content = td->judge_pages + input_pos;
 	td->stdin_size = input_len;
+	
+	// Setup signals
+	judgeduck::start_signal = (unsigned * volatile) (judgeduck::judge_signal_page + 0x100);
+	judgeduck::contestant_ready = judgeduck::start_signal + 1;
+	judgeduck::contestant_done = judgeduck::start_signal + 2;
 	
 	// read_file(td, td->input_filename, td->stdin_content, td->stdin_size);
 	judgeduck::stdin_content = td->stdin_content;
@@ -88,11 +102,11 @@ static void finish_judgeduck(TaskDuck *td) {
 	td->stdout_size = size;
 	
 	// Map the second metadata page
-	sys_map_judge_pages(td->judge_pages + PGSIZE, PGSIZE, PGSIZE);
+	sys_map_judge_pages(td->judge_pages + PGSIZE * 2, PGSIZE * 2, PGSIZE);
 	
 	// Read the input info
-	unsigned answer_pos = ((unsigned *) td->judge_pages)[PGSIZE / 4];
-	unsigned answer_len = ((unsigned *) td->judge_pages)[PGSIZE / 4 + 1];
+	unsigned answer_pos = ((unsigned *) td->judge_pages)[PGSIZE * 2 / 4];
+	unsigned answer_len = ((unsigned *) td->judge_pages)[PGSIZE * 2 / 4 + 1];
 	sys_map_judge_pages(td->judge_pages + answer_pos, answer_pos, ROUNDUP(answer_len, PGSIZE));
 	td->answer_content = td->judge_pages + answer_pos;
 	td->answer_size = answer_len;
@@ -109,6 +123,10 @@ extern "C" {
 static void judge_wrapper() {
 	extern void libstdduck_init();
 	extern void libstdduck_fini();
+	
+	// Wait for the start signal
+	*judgeduck::contestant_ready = 1;
+	while (*judgeduck::start_signal == 0) __asm__ volatile("pause");
 	
 	libstdduck_init();
 	((void (*)()) real_eip)();
