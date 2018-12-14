@@ -20,9 +20,9 @@ namespace judgeduck {
 	int stdout_max_size;
 	int stdout_size;
 	
-	unsigned * volatile start_signal;
-	unsigned * volatile contestant_ready;
-	unsigned * volatile contestant_done;
+	volatile unsigned *start_signal;
+	volatile unsigned *contestant_ready;
+	volatile unsigned *contestant_done;
 	
 	char judge_signal_page[PGSIZE] __attribute__((aligned(PGSIZE)));
 }
@@ -67,7 +67,7 @@ static void init_judgeduck(TaskDuck *td) {
 	td->stdin_size = input_len;
 	
 	// Setup signals
-	judgeduck::start_signal = (unsigned * volatile) (judgeduck::judge_signal_page + 0x100);
+	judgeduck::start_signal = (volatile unsigned *) (judgeduck::judge_signal_page + 0x100);
 	judgeduck::contestant_ready = judgeduck::start_signal + 1;
 	judgeduck::contestant_done = judgeduck::start_signal + 2;
 	
