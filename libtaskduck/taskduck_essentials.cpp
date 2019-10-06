@@ -60,10 +60,7 @@ void TaskDuck::pre_alloc_memory() {
 	
 	char *mem_end = ROUNDUP((char *) 0x10000000 + this->mem_kb_hard * 1024, PGSIZE);
 	extern int ebss;
-	for (char *i = (char *) &ebss; i < mem_end; i += PGSIZE) {
-		if (sys_page_alloc(0, i, PTE_P | PTE_U | PTE_W) < 0) {
-			// panic("page alloc failed %p\n", i);
-			jd_exit();
-		}
+	if (sys_page_alloc_range(0, &ebss, mem_end, PTE_P | PTE_U | PTE_W) < 0) {
+		jd_exit();
 	}
 }
