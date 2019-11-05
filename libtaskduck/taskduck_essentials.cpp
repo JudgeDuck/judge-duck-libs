@@ -52,14 +52,27 @@ void quit_judge() {
 	sys_quit_judge();
 }
 
+namespace judgeduck {
+	extern char *malloc_start;
+	extern int stdout_max_size;
+}
+
 void TaskDuck::pre_alloc_memory() {
 	if (this->memory_allocated) {
 		return;
 	}
 	this->memory_allocated = true;
 	
-	char *mem_end = ROUNDUP((char *) 0x10000000 + this->mem_kb_hard * 1024, PGSIZE);
 	extern int ebss;
+	char *mem_end = ROUNDUP((char *) 0x10000000 + this->mem_kb_hard * 1024, PGSIZE);
+	if ((char *) &ebss > mem_end) {
+		mem_end = (char *) &ebss;
+		judgeduck::stdout_max_size = 0;  // Too large memory !!!
+	} else if ((char *) judgeduck::malloc_start > mem_end) {
+		judgeduck::stdout_max_size = mem_end - (char *) &ebss;
+		mem_end = (char *) judgeduck::malloc_start;
+	}
+	jd_cprintf("max stdout size = %d !!!!!!\n", judgeduck::stdout_max_size);
 	if (sys_page_alloc_range(0, &ebss, mem_end, PTE_P | PTE_U | PTE_W) < 0) {
 		jd_exit();
 	}

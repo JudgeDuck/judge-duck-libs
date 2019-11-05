@@ -75,8 +75,6 @@ static void init_judgeduck(TaskDuck *td) {
 	judgeduck::stdin_content = td->stdin_content;
 	judgeduck::stdin_size = td->stdin_size;
 	
-	td->pre_alloc_memory();
-	
 	int n_output_pages = ROUNDUP(td->max_output_size, PGSIZE) / PGSIZE;
 	td->stdout_content = (char *) &ebss;
 	td->stdout_max_size = td->max_output_size;
@@ -85,6 +83,14 @@ static void init_judgeduck(TaskDuck *td) {
 	judgeduck::stdout_size = 0;
 	
 	judgeduck::malloc_start = (char *) &ebss + n_output_pages * PGSIZE;
+
+	td->pre_alloc_memory();
+	if (judgeduck::stdout_max_size < td->stdout_max_size) {
+		td->stdout_max_size = judgeduck::stdout_max_size;
+	}
+	if (td->stdout_max_size < judgeduck::stdout_max_size) {
+		judgeduck::stdout_max_size = td->stdout_max_size;
+	}
 	
 	// jd_cprintf("init done\n");
 }

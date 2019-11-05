@@ -18,7 +18,7 @@
  * so that -E_NO_MEM and E_NO_MEM are equivalent.
  */
 
-static const char * const error_string[MAXERROR] =
+const char * const jd_error_string[MAXERROR] =
 {
 	[E_UNSPECIFIED]	= "unspecified error",
 	[E_BAD_ENV]	= "bad environment",
@@ -174,7 +174,7 @@ jd_vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list a
 			err = va_arg(ap, int);
 			if (err < 0)
 				err = -err;
-			if (err >= MAXERROR || (p = error_string[err]) == NULL)
+			if (err >= MAXERROR || (p = jd_error_string[err]) == NULL)
 				jd_printfmt(putch, putdat, "error %d", err);
 			else
 				jd_printfmt(putch, putdat, "%s", p);

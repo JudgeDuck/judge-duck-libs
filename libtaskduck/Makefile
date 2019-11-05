@@ -9,9 +9,11 @@ endif
 UNAME_S := $(shell uname -s)
 
 USER_CFLAGS := -pipe -fno-builtin -O2 -std=gnu99 -MD -fno-omit-frame-pointer -static -Wall -Wno-format -Wno-unused -gstabs -m32 -fno-tree-ch -fno-stack-protector -I../libjudgeduck_include -I../libtaskduck_include -DJOS_USER -gstabs 
+USER_CFLAGS := $(USER_CFLAGS) -fno-PIC
 # USER_CFLAGS := $(USER_CFLAGS) -DJD_OLD_MEMORY_LIMIT
 
 USER_CXXFLAGS := -pipe -fno-builtin -O2 -MD -fno-omit-frame-pointer -static -Wall -Wno-format -Wno-unused -gstabs -m32 -fno-tree-ch -fno-stack-protector -I../libjudgeduck_include -I../libtaskduck_include -DJOS_USER -gstabs 
+USER_CXXFLAGS := $(USER_CXXFLAGS) -fno-PIC
 # USER_CXXFLAGS := $(USER_CXXFLAGS) -DJD_OLD_MEMORY_LIMIT
 
 OBJDIR := .
