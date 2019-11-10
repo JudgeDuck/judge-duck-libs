@@ -65,15 +65,23 @@ void TaskDuck::pre_alloc_memory() {
 	
 	extern int ebss;
 	char *mem_end = ROUNDUP((char *) 0x10000000 + this->mem_kb_hard * 1024, PGSIZE);
-	if ((char *) &ebss > mem_end) {
-		mem_end = (char *) &ebss;
-		judgeduck::stdout_max_size = 0;  // Too large memory !!!
-	} else if ((char *) judgeduck::malloc_start > mem_end) {
-		judgeduck::stdout_max_size = mem_end - (char *) &ebss;
-		mem_end = (char *) judgeduck::malloc_start;
+	if (mem_end <= judgeduck::malloc_start) {
+		mem_end = judgeduck::malloc_start;
+		this->mem_kb_hard = (judgeduck::malloc_start - (char *) &ebss) / 1024;
 	}
+	
+	// map stdout pages
+	int stdout_pages_len = judgeduck::malloc_start - (char *) &ebss;
+	int stdout_pages_n = stdout_pages_len / PGSIZE;
+	if (sys_map_judge_pages(&ebss, 4 * PGSIZE, stdout_pages_len) != stdout_pages_n) {
+		jd_exit();
+	}
+	memset(&ebss, 0, stdout_pages_len);
+	
 	jd_cprintf("max stdout size = %d !!!!!!\n", judgeduck::stdout_max_size);
-	if (sys_page_alloc_range(0, &ebss, mem_end, PTE_P | PTE_U | PTE_W) < 0) {
+	
+	// alloc heap memory
+	if (sys_page_alloc_range(0, judgeduck::malloc_start, mem_end, PTE_P | PTE_U | PTE_W) < 0) {
 		jd_exit();
 	}
 }

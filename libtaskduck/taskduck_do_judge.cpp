@@ -85,12 +85,6 @@ static void init_judgeduck(TaskDuck *td) {
 	judgeduck::malloc_start = (char *) &ebss + n_output_pages * PGSIZE;
 
 	td->pre_alloc_memory();
-	if (judgeduck::stdout_max_size < td->stdout_max_size) {
-		td->stdout_max_size = judgeduck::stdout_max_size;
-	}
-	if (td->stdout_max_size < judgeduck::stdout_max_size) {
-		judgeduck::stdout_max_size = td->stdout_max_size;
-	}
 	
 	// jd_cprintf("init done\n");
 }
@@ -106,6 +100,10 @@ static void finish_judgeduck(TaskDuck *td) {
 		size = td->stdout_max_size;
 	}
 	td->stdout_size = size;
+	
+	// Write stdout metadata
+	sys_map_judge_pages(td->judge_pages + PGSIZE * 3, PGSIZE * 3, PGSIZE);
+	* (volatile unsigned *) (td->judge_pages + PGSIZE * 3) = (unsigned) size;
 	
 	// Map the second metadata page
 	sys_map_judge_pages(td->judge_pages + PGSIZE * 2, PGSIZE * 2, PGSIZE);
